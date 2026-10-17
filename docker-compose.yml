@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    ports:
+      - "80:5000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: sqlite:////data/app.db
+    volumes:
+      - app-data:/data
+    restart: always
+
+volumes:
+  app-data:

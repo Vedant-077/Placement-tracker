@@ -1,0 +1,659 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Placement Tracker{% endblock %}
+
+{% block body %}
+<style>
+    * { box-sizing: border-box; }
+
+    body {
+        background: #f4f7fb;
+        color: #1e293b;
+    }
+
+    .dashboard {
+        max-width: 1200px;
+        margin: 25px auto;
+        padding: 0 8px;
+    }
+
+    .welcome { margin-bottom: 28px; }
+    .welcome h1 {
+        font-size: 30px;
+        margin: 0 0 8px;
+        color: #172554;
+        letter-spacing: -0.5px;
+    }
+    .welcome p { color: #64748b; margin: 0; line-height: 1.6; }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        position: relative;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+    }
+    .stat-card::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: #6366f1;
+    }
+    .stat-card:nth-child(2)::after { background: #8b5cf6; }
+    .stat-card:nth-child(3)::after { background: #f97316; }
+    .stat-card:nth-child(4)::after { background: #22c55e; }
+    .stat-icon { font-size: 24px; margin-bottom: 12px; }
+    .stat-card p { margin: 0 0 12px; font-size: 14px; color: #64748b; }
+    .stat-card h2 { margin: 0; font-size: 32px; color: #172554; }
+
+    .panel, .analytics-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+    }
+    .panel { padding: 26px; margin-bottom: 28px; }
+    .panel-header { margin-bottom: 22px; }
+    .panel-header h2 {
+        font-size: 21px;
+        margin: 0 0 7px;
+        color: #172554;
+    }
+    .panel-header p { margin: 0; color: #64748b; font-size: 14px; }
+
+    .application-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+    .field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .field label { font-size: 14px; font-weight: 600; color: #334155; }
+    .field input, .field select {
+        width: 100%;
+        min-width: 0;
+        padding: 12px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        background: #fff;
+        color: #1e293b;
+        font-size: 14px;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .field input:focus, .field select:focus, .search-box:focus, .status-select:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+    }
+    .full-width { grid-column: 1 / -1; }
+    .file-note { color: #64748b; font-size: 12px; line-height: 1.5; }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 9px;
+        padding: 11px 17px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform .15s, background .15s, box-shadow .15s;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: #4f46e5; color: #fff; }
+    .btn-primary:hover { background: #4338ca; box-shadow: 0 5px 12px rgba(79, 70, 229, .18); }
+    .btn-danger { background: #fff1f2; color: #be123c; padding: 8px 12px; }
+    .btn-danger:hover { background: #ffe4e6; }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .search-box {
+        width: 280px;
+        max-width: 100%;
+        padding: 11px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        font-size: 14px;
+        outline: none;
+    }
+    .table-wrapper { overflow-x: auto; }
+    .applications-table { width: 100%; border-collapse: collapse; min-width: 650px; }
+    .applications-table th {
+        background: #f8fafc;
+        color: #64748b;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: .7px;
+        padding: 15px 14px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .applications-table td {
+        padding: 17px 14px;
+        border-bottom: 1px solid #edf2f7;
+        font-size: 14px;
+        vertical-align: middle;
+    }
+    .applications-table tbody tr.application-row:hover { background: #fafbff; }
+    .company-name { font-weight: 700; color: #1e293b; }
+    .role-name { color: #64748b; }
+    .status-select {
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        cursor: pointer;
+        outline: none;
+        max-width: 155px;
+        background: #fff;
+    }
+    .status-select.status-applied { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+    .status-select.status-test-cleared { background: #ede9fe; color: #6d28d9; border-color: #ddd6fe; }
+    .status-select.status-interview { background: #ffedd5; color: #c2410c; border-color: #fed7aa; }
+    .status-select.status-offered { background: #dcfce7; color: #15803d; border-color: #bbf7d0; }
+    .status-select.status-rejected { background: #ffe4e6; color: #be123c; border-color: #fecdd3; }
+
+    .resume-link { color: #4f46e5; text-decoration: none; font-weight: 600; }
+    .resume-link:hover { text-decoration: underline; }
+    .empty-state { text-align: center; padding: 35px 15px; color: #64748b; }
+    .empty-state .empty-icon { font-size: 35px; margin-bottom: 10px; }
+    .empty-state h3 { color: #334155; margin: 5px 0 8px; }
+    .empty-state p { margin: 0; font-size: 14px; }
+
+    .analytics-section { margin: 34px 0 32px; }
+    .analytics-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    .analytics-heading h2 { color: #172554; font-size: 25px; margin: 0 0 8px; }
+    .analytics-heading p { color: #64748b; margin: 0; line-height: 1.5; }
+    .analytics-note { color: #64748b; font-size: 12px; }
+    .analytics-kpis {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .analytics-kpi {
+        background: linear-gradient(135deg, #fff 0%, #f8faff 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 18px 20px;
+    }
+    .analytics-kpi .kpi-label { color: #64748b; font-size: 13px; margin: 0 0 9px; }
+    .analytics-kpi .kpi-value { color: #172554; font-size: 27px; font-weight: 750; margin: 0 0 5px; }
+    .analytics-kpi .kpi-help { color: #64748b; font-size: 12px; margin: 0; line-height: 1.45; }
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+    .analytics-card { padding: 23px; min-width: 0; }
+    .analytics-card h3 { color: #172554; font-size: 16px; margin: 0 0 6px; }
+    .analytics-card .card-subtitle { color: #64748b; font-size: 13px; margin: 0 0 18px; line-height: 1.5; }
+    .chart-container { position: relative; height: 290px; width: 100%; }
+    .chart-empty {
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: #64748b;
+        gap: 8px;
+    }
+    .chart-empty strong { color: #334155; }
+    .chart-empty p { margin: 0; font-size: 13px; }
+    .analytics-footer { color: #64748b; font-size: 12px; margin: 14px 2px 0; line-height: 1.5; }
+
+    @media (max-width: 900px) {
+        .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .analytics-kpis { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 700px) {
+        .dashboard { margin: 15px auto; }
+        .welcome h1 { font-size: 25px; }
+        .panel { padding: 17px; }
+        .application-form { grid-template-columns: 1fr; }
+        .full-width { grid-column: auto; }
+        .table-header { align-items: stretch; flex-direction: column; }
+        .search-box { width: 100%; }
+        .analytics-grid { grid-template-columns: 1fr; }
+        .analytics-card { padding: 18px; }
+        .chart-container { height: 260px; }
+    }
+</style>
+
+<div class="dashboard">
+    <section class="welcome">
+        <h1>Welcome back! 👋</h1>
+        <p>Track your job applications and stay one step closer to your dream career.</p>
+    </section>
+
+    <section class="stats" aria-label="Application summary">
+        <div class="stat-card">
+            <div class="stat-icon" aria-hidden="true">📋</div>
+            <p>Total Applications</p>
+            <h2>{{ apps|length }}</h2>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" aria-hidden="true">⏳</div>
+            <p>In Progress</p>
+            <h2>{{ apps|selectattr('status', 'in', ['Applied', 'Test Cleared'])|list|length }}</h2>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" aria-hidden="true">🎯</div>
+            <p>Interviews</p>
+            <h2>{{ apps|selectattr('status', 'equalto', 'Interview')|list|length }}</h2>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" aria-hidden="true">🎉</div>
+            <p>Offers Received</p>
+            <h2>{{ apps|selectattr('status', 'equalto', 'Offered')|list|length }}</h2>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <h2>＋ Add a Company Application</h2>
+            <p>Keep all your placement opportunities organized in one place.</p>
+        </div>
+
+        <form class="application-form" method="post" action="{{ url_for('add') }}" enctype="multipart/form-data">
+            <div class="field">
+                <label for="company">Company Name</label>
+                <input id="company" name="company" type="text" placeholder="e.g. TCS, Infosys, Capgemini" required>
+            </div>
+            <div class="field">
+                <label for="role">Job Role</label>
+                <input id="role" name="role" type="text" placeholder="e.g. Software Developer" required>
+            </div>
+            <div class="field">
+                <label for="status">Application Status</label>
+                <select id="status" name="status">
+                    {% for s in statuses %}
+                    <option value="{{ s }}">{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <label for="resume">Upload Resume</label>
+                <input id="resume" type="file" name="resume" accept=".pdf,.doc,.docx">
+                <span class="file-note">Optional · PDF, DOC or DOCX · Maximum 5 MB</span>
+            </div>
+            <div class="full-width">
+                <button type="submit" class="btn btn-primary">＋ Add Application</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel">
+        <div class="table-header">
+            <div class="panel-header" style="margin-bottom: 0;">
+                <h2>My Applications</h2>
+                <p id="application-count">You are tracking {{ apps|length }} application(s).</p>
+            </div>
+            <input id="searchInput" class="search-box" type="search" placeholder="🔍 Search companies, roles or statuses..." aria-label="Search applications">
+        </div>
+
+        <div class="table-wrapper">
+            <table class="applications-table" id="applicationsTable">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Job Role</th>
+                        <th>Status</th>
+                        <th>Resume</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="applicationsBody">
+                    {% for a in apps %}
+                    <tr class="application-row">
+                        <td><span class="company-name">{{ a.company }}</span></td>
+                        <td><span class="role-name">{{ a.role }}</span></td>
+                        <td>
+                            <form method="post" action="{{ url_for('update_status', app_id=a.id) }}">
+                                <select class="status-select" name="status"
+                                        aria-label="Status for {{ a.company }}"
+                                        onchange="this.form.submit()">
+                                    {% for s in statuses %}
+                                    <option value="{{ s }}" {% if s == a.status %}selected{% endif %}>{{ s }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </td>
+                        <td>
+                            {% if a.link %}
+                            <a class="resume-link" href="{{ a.link }}">↓ Download</a>
+                            {% else %}
+                            <span style="color: #94a3b8;">Not uploaded</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="post" action="{{ url_for('delete', app_id=a.id) }}"
+                                  onsubmit="return confirm('Are you sure you want to delete this application?');">
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="initial-empty-row">
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <div class="empty-icon">📭</div>
+                                <h3>No applications yet</h3>
+                                <p>Add your first company application using the form above.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr id="noSearchResults" style="display: none;">
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <div class="empty-icon">🔍</div>
+                                <h3>No matching applications</h3>
+                                <p>Try searching for a different company, role or status.</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="analytics-section" aria-labelledby="analytics-title">
+        <div class="analytics-heading">
+            <div>
+                <h2 id="analytics-title">📊 Placement Analytics</h2>
+                <p>Understand your application pipeline and placement progress at a glance.</p>
+            </div>
+            <span class="analytics-note">Based on your current applications</span>
+        </div>
+
+        <div class="analytics-kpis">
+            <article class="analytics-kpi">
+                <p class="kpi-label">Interview conversion</p>
+                <p class="kpi-value" id="interviewRate">0%</p>
+                <p class="kpi-help">Applications at Interview or Offered stage, divided by all applications.</p>
+            </article>
+            <article class="analytics-kpi">
+                <p class="kpi-label">Offer rate</p>
+                <p class="kpi-value" id="offerRate">0%</p>
+                <p class="kpi-help">Applications marked Offered, divided by all applications.</p>
+            </article>
+            <article class="analytics-kpi">
+                <p class="kpi-label">Companies tracked</p>
+                <p class="kpi-value" id="companyCount">0</p>
+                <p class="kpi-help">Distinct company names in your application list.</p>
+            </article>
+        </div>
+
+        <div class="analytics-grid">
+            <article class="analytics-card">
+                <h3>Applications by Status</h3>
+                <p class="card-subtitle">See how your applications are distributed across each stage.</p>
+                <div class="chart-container" id="statusChartContainer">
+                    <canvas id="statusChart" role="img" aria-label="Doughnut chart of applications by status"></canvas>
+                </div>
+                <div class="chart-empty" id="statusChartEmpty" hidden>
+                    <strong>No status data yet</strong>
+                    <p>Add an application to see your status distribution.</p>
+                </div>
+            </article>
+
+            <article class="analytics-card">
+                <h3>Applications by Company</h3>
+                <p class="card-subtitle">Compare the number of applications recorded for each company.</p>
+                <div class="chart-container" id="companyChartContainer">
+                    <canvas id="companyChart" role="img" aria-label="Bar chart of applications by company"></canvas>
+                </div>
+                <div class="chart-empty" id="companyChartEmpty" hidden>
+                    <strong>No company data yet</strong>
+                    <p>Add an application to compare companies here.</p>
+                </div>
+            </article>
+        </div>
+        <p class="analytics-footer">Rates are descriptive tracking metrics, not predictions of placement probability. The charts use your saved application records.</p>
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function () {
+    "use strict";
+
+    const searchInput = document.getElementById("searchInput");
+    const applicationRows = Array.from(document.querySelectorAll(".application-row"));
+    const applicationCount = document.getElementById("application-count");
+    const noSearchResults = document.getElementById("noSearchResults");
+
+    function filterApplications() {
+        const query = (searchInput?.value || "").toLowerCase().trim();
+        let visibleCount = 0;
+
+        applicationRows.forEach(function (row) {
+            const company = row.cells[0]?.textContent.toLowerCase() || "";
+            const role = row.cells[1]?.textContent.toLowerCase() || "";
+            const status = row.cells[2]?.textContent.toLowerCase() || "";
+            const matches = company.includes(query) || role.includes(query) || status.includes(query);
+
+            row.style.display = matches ? "" : "none";
+            if (matches) visibleCount++;
+        });
+
+        if (noSearchResults) {
+            noSearchResults.style.display =
+                query && applicationRows.length > 0 && visibleCount === 0 ? "" : "none";
+        }
+
+        if (applicationCount) {
+            applicationCount.textContent = query
+                ? "Showing " + visibleCount + " matching application(s)."
+                : "You are tracking " + applicationRows.length + " application(s).";
+        }
+    }
+
+    if (searchInput) searchInput.addEventListener("input", filterApplications);
+
+    function updateStatusColors() {
+        document.querySelectorAll(".status-select").forEach(function (select) {
+            select.classList.remove(
+                "status-applied",
+                "status-test-cleared",
+                "status-interview",
+                "status-offered",
+                "status-rejected"
+            );
+            const statusClass = select.value.toLowerCase().trim().replace(/\s+/g, "-");
+            select.classList.add("status-" + statusClass);
+        });
+    }
+    updateStatusColors();
+
+    const statuses = ["Applied", "Test Cleared", "Interview", "Offered", "Rejected"];
+    const statusColors = ["#3b82f6", "#8b5cf6", "#f97316", "#22c55e", "#f43f5e"];
+
+    const statusCounts = Object.fromEntries(statuses.map(function (status) {
+        return [status, 0];
+    }));
+    const companyCounts = {};
+
+    applicationRows.forEach(function (row) {
+        const company = (row.cells[0]?.textContent || "").trim();
+        const statusSelect = row.querySelector(".status-select");
+        const status = statusSelect ? statusSelect.value : (row.cells[2]?.textContent || "").trim();
+
+        if (Object.prototype.hasOwnProperty.call(statusCounts, status)) {
+            statusCounts[status] += 1;
+        }
+        if (company) {
+            // Treat company names with different capitalization as the same company.
+            const key = company.toLocaleLowerCase();
+            if (!companyCounts[key]) companyCounts[key] = { label: company, count: 0 };
+            companyCounts[key].count += 1;
+        }
+    });
+
+    const totalApplications = applicationRows.length;
+    const interviewOrOfferCount = statusCounts["Interview"] + statusCounts["Offered"];
+    const offerCount = statusCounts["Offered"];
+    const distinctCompanies = Object.keys(companyCounts).length;
+
+    const interviewRateElement = document.getElementById("interviewRate");
+    const offerRateElement = document.getElementById("offerRate");
+    const companyCountElement = document.getElementById("companyCount");
+
+    if (interviewRateElement) {
+        interviewRateElement.textContent = totalApplications
+            ? (interviewOrOfferCount / totalApplications * 100).toFixed(1) + "%"
+            : "0%";
+    }
+    if (offerRateElement) {
+        offerRateElement.textContent = totalApplications
+            ? (offerCount / totalApplications * 100).toFixed(1) + "%"
+            : "0%";
+    }
+    if (companyCountElement) companyCountElement.textContent = String(distinctCompanies);
+
+    function showEmptyState(chartContainerId, emptyId, hasData) {
+        const chartContainer = document.getElementById(chartContainerId);
+        const emptyMessage = document.getElementById(emptyId);
+        if (chartContainer) chartContainer.hidden = !hasData;
+        if (emptyMessage) emptyMessage.hidden = hasData;
+    }
+
+    const hasApplications = totalApplications > 0;
+    showEmptyState("statusChartContainer", "statusChartEmpty", hasApplications);
+    showEmptyState("companyChartContainer", "companyChartEmpty", hasApplications);
+
+    if (typeof Chart !== "undefined" && hasApplications) {
+        const statusCanvas = document.getElementById("statusChart");
+        if (statusCanvas) {
+            new Chart(statusCanvas, {
+                type: "doughnut",
+                data: {
+                    labels: statuses,
+                    datasets: [{
+                        label: "Applications",
+                        data: statuses.map(function (status) { return statusCounts[status]; }),
+                        backgroundColor: statusColors,
+                        borderColor: "#ffffff",
+                        borderWidth: 3,
+                        hoverOffset: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "64%",
+                    plugins: {
+                        legend: {
+                            position: "bottom",
+                            labels: { usePointStyle: true, pointStyle: "circle", padding: 18 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const value = Number(context.raw || 0);
+                                    const percentage = totalApplications
+                                        ? (value / totalApplications * 100).toFixed(1)
+                                        : "0.0";
+                                    return " " + context.label + ": " + value + " (" + percentage + "%)";
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        const companyCanvas = document.getElementById("companyChart");
+        const sortedCompanies = Object.values(companyCounts).sort(function (a, b) {
+            return b.count - a.count || a.label.localeCompare(b.label);
+        });
+        if (companyCanvas) {
+            new Chart(companyCanvas, {
+                type: "bar",
+                data: {
+                    labels: sortedCompanies.map(function (company) { return company.label; }),
+                    datasets: [{
+                        label: "Applications",
+                        data: sortedCompanies.map(function (company) { return company.count; }),
+                        backgroundColor: "#6366f1",
+                        hoverBackgroundColor: "#4f46e5",
+                        borderRadius: 7,
+                        maxBarThickness: 42
+                    }]
+                },
+                options: {
+                    indexAxis: sortedCompanies.length > 7 ? "y" : "x",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return " Applications: " + context.raw;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { display: false },
+                            ticks: sortedCompanies.length > 7
+                                ? { precision: 0 }
+                                : { precision: 0, maxRotation: 45, minRotation: 0 }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 },
+                            grid: { color: "rgba(148, 163, 184, 0.18)" }
+                        }
+                    }
+                }
+            });
+        }
+    } else if (typeof Chart === "undefined" && hasApplications) {
+        showEmptyState("statusChartContainer", "statusChartEmpty", false);
+        showEmptyState("companyChartContainer", "companyChartEmpty", false);
+        const statusEmpty = document.getElementById("statusChartEmpty");
+        const companyEmpty = document.getElementById("companyChartEmpty");
+        if (statusEmpty) {
+            statusEmpty.hidden = false;
+            statusEmpty.innerHTML = "<strong>Charts could not load</strong><p>Please check your internet connection and refresh the page.</p>";
+        }
+        if (companyEmpty) {
+            companyEmpty.hidden = false;
+            companyEmpty.innerHTML = "<strong>Charts could not load</strong><p>Please check your internet connection and refresh the page.</p>";
+        }
+    }
+})();
+</script>
+{% endblock %}

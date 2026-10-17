@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{% block title %}Placement Tracker{% endblock %}</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7fb;
+            color: #172554;
+        }
+
+        .navbar {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #172554;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #4f46e5;
+            color: white;
+            font-size: 23px;
+            font-weight: bold;
+        }
+
+        .brand-text h2 {
+            font-size: 18px;
+            margin: 0 0 4px;
+        }
+
+        .brand-text p {
+            font-size: 12px;
+            margin: 0;
+            color: #64748b;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-weight: bold;
+        }
+
+        .user-email {
+            font-size: 13px;
+            font-weight: bold;
+            color: #1e293b;
+            overflow-wrap: anywhere;
+        }
+
+        .user-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .logout-btn {
+            text-decoration: none;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            padding: 10px 15px;
+            font-size: 13px;
+            font-weight: bold;
+            background: white;
+        }
+
+        .logout-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .flash {
+            max-width: 1200px;
+            margin: 15px auto;
+            padding: 12px 16px;
+            background: #fef3c7;
+            color: #92400e;
+            border-radius: 9px;
+        }
+
+        .page-footer {
+            text-align: center;
+            padding: 25px 15px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        @media (max-width: 600px) {
+            .navbar {
+                padding: 13px 4%;
+                flex-wrap: wrap;
+            }
+
+            .nav-right {
+                width: 100%;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            .user-email {
+                max-width: 190px;
+            }
+
+            .page-footer {
+                padding: 20px 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+
+        <a class="brand" href="{{ url_for('dashboard') }}">
+            <div class="brand-icon">✦</div>
+
+            <div class="brand-text">
+                <h2>Placement Tracker</h2>
+                <p>Your career, organized.</p>
+            </div>
+        </a>
+
+        {% if current_user.is_authenticated %}
+        <div class="nav-right">
+
+            <div class="user-info">
+                <div class="avatar">
+                    {{ current_user.email[0]|upper }}
+                </div>
+
+                <div>
+                    <div class="user-email">
+                        {{ current_user.email }}
+                    </div>
+                    <div class="user-label">Student Account</div>
+                </div>
+            </div>
+
+            <a class="logout-btn" href="{{ url_for('logout') }}">
+                Log out
+            </a>
+
+        </div>
+        {% endif %}
+
+    </header>
+
+    <main>
+        {% for message in get_flashed_messages() %}
+            <div class="flash">{{ message }}</div>
+        {% endfor %}
+
+        {% block body %}{% endblock %}
+    </main>
+
+    <footer class="page-footer">
+        Placement Tracker · Stay organized. Keep moving forward.
+    </footer>
+
+</body>
+</html>
